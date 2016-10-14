@@ -3,6 +3,11 @@
 ## Motivation
 This project is Application for Ios and  Android.It use Mqtt protocols to connect with local Mqtt broker for open LED that it connect to nodemcu.
 
+## Softwares
+- Xcode
+- AndroidSDK
+- Genymotion
+
 ## Packages
 - React-Native
 - Shoutem/ui
