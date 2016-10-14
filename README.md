@@ -6,7 +6,6 @@ This project create practice for Data Collection and Analysis System for Running
 ## Using
 - Clone repository
 - Go to this project directory
-- Go to src folder
 - Open file what you wish
 
 ```bash
