@@ -45,16 +45,26 @@ export default class HelloWorld extends Component{
 		})
 
 		client.on('connect',  () => {
+			this.setState({ statusConnectionBroker : 'Connected' })
 			client.subscribe('#')
 		  	this.setState({ datas : []})
 		})
 
+		client.on('reconnect',  () => {
+			console.log('reconnect')
+			this.setState({ statusConnectionBroker : 'Unconnected' })
+		})
+
+		client.on('error',  () => {
+			console.log('error')
+			this.setState({ statusConnectionBroker : 'Unconnected' })
+		})
+
 		client.on('message', (topic, message, packet) => {
-			console.log(packet)
 			let data = {
 				topic : topic,
 				message : message.toString(),
-				client_name : client.options.clientId
+				client_name : topic.split('/').pop()
 			}
 			this.setState({ datas : [...this.state.datas, data] })
 		})	
@@ -64,7 +74,10 @@ export default class HelloWorld extends Component{
 		this.configConnectBroker(defaultIpBroker, defaultPortWSBroker)
 	}
 
-
+	_resetMessage(){
+		this.refs.formSendMessage.topic.value = ''
+		this.refs.formSendMessage.message.value = ''
+	}
 
 	bbb(){
 		let { topic, message } = this.refs.formSendMessage
@@ -82,7 +95,7 @@ export default class HelloWorld extends Component{
 				<br/>
 		      </Col>
 		      <Col md={10}>
-		      	<h1>Mqtt Message</h1>
+		      	<h1>Mqtt Message [ <span style={{ 'color' : (this.state.statusConnectionBroker == 'Connected') ? 'green' : 'red'}}>{ this.state.statusConnectionBroker }</span> ]</h1>
 		      	<hr/>
 		      	<h3>Config Connection to Mqtt Broker</h3>
 		      	<form action="javascript:void(0)" onSubmit={(event) => this.configConnectBroker(event.target.ip.value, event.target.port.value)} ref = 'formConfigClient'>
@@ -96,6 +109,7 @@ export default class HelloWorld extends Component{
 			      	Topic : <input type="text" name='topic' placeholder='Example : /ESP/LED'/><br/>
 			      	Message : <input type="text" name='message' placeholder='Example : HelloWorld'/><br/>
 					<Button bsStyle="success" type='submit'>Send</Button>
+					<Button bsStyle="danger" type='button' onClick={this._resetMessage.bind(this)}>Reset</Button>
 		      	</form>
 				<br/>
 				<br/>

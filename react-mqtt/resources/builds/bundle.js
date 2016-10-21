@@ -54874,16 +54874,26 @@ var HelloWorld = function (_Component) {
 			});
 
 			client.on('connect', function () {
+				_this2.setState({ statusConnectionBroker: 'Connected' });
 				client.subscribe('#');
 				_this2.setState({ datas: [] });
 			});
 
+			client.on('reconnect', function () {
+				console.log('reconnect');
+				_this2.setState({ statusConnectionBroker: 'Unconnected' });
+			});
+
+			client.on('error', function () {
+				console.log('error');
+				_this2.setState({ statusConnectionBroker: 'Unconnected' });
+			});
+
 			client.on('message', function (topic, message, packet) {
-				console.log(packet);
 				var data = {
 					topic: topic,
 					message: message.toString(),
-					client_name: client.options.clientId
+					client_name: topic.split('/').pop()
 				};
 				_this2.setState({ datas: [].concat(_toConsumableArray(_this2.state.datas), [data]) });
 			});
@@ -54892,6 +54902,12 @@ var HelloWorld = function (_Component) {
 		key: 'componentWillMount',
 		value: function componentWillMount() {
 			this.configConnectBroker(defaultIpBroker, defaultPortWSBroker);
+		}
+	}, {
+		key: '_resetMessage',
+		value: function _resetMessage() {
+			this.refs.formSendMessage.topic.value = '';
+			this.refs.formSendMessage.message.value = '';
 		}
 	}, {
 		key: 'bbb',
@@ -54927,7 +54943,13 @@ var HelloWorld = function (_Component) {
 						_react2.default.createElement(
 							'h1',
 							null,
-							'Mqtt Message'
+							'Mqtt Message [ ',
+							_react2.default.createElement(
+								'span',
+								{ style: { 'color': this.state.statusConnectionBroker == 'Connected' ? 'green' : 'red' } },
+								this.state.statusConnectionBroker
+							),
+							' ]'
 						),
 						_react2.default.createElement('hr', null),
 						_react2.default.createElement(
@@ -54973,6 +54995,11 @@ var HelloWorld = function (_Component) {
 								_reactBootstrap.Button,
 								{ bsStyle: 'success', type: 'submit' },
 								'Send'
+							),
+							_react2.default.createElement(
+								_reactBootstrap.Button,
+								{ bsStyle: 'danger', type: 'button', onClick: this._resetMessage.bind(this) },
+								'Reset'
 							)
 						),
 						_react2.default.createElement('br', null),
