@@ -54803,6 +54803,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var client = void 0;
+var defaultIpBroker = '192.168.10.10',
+    defaultPortWSBroker = 9001;
 
 var RowData = function RowData(_ref) {
 	var index = _ref.index;
@@ -54852,27 +54854,32 @@ var HelloWorld = function (_Component) {
 
 		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref2 = HelloWorld.__proto__ || Object.getPrototypeOf(HelloWorld)).call.apply(_ref2, [this].concat(args))), _this), _this.state = {
 			x: 'empty',
-			datas: []
-
+			datas: [],
+			statusConnectionBroker: 'Wait...'
 		}, _temp), _possibleConstructorReturn(_this, _ret);
 	}
 
 	_createClass(HelloWorld, [{
-		key: 'componentWillMount',
-		value: function componentWillMount() {
+		key: 'configConnectBroker',
+		value: function configConnectBroker(ip, port) {
 			var _this2 = this;
 
-			client = _mqtt2.default.connect('ws://localhost:9001', {
+			if (typeof client !== "undefined") {
+				client.end();
+			}
+
+			client = _mqtt2.default.connect('ws://' + ip + ':' + port, {
 				cmd: 'connect',
 				clientId: 'Web'
 			});
 
 			client.on('connect', function () {
 				client.subscribe('#');
+				_this2.setState({ datas: [] });
 			});
 
 			client.on('message', function (topic, message, packet) {
-				console.log(message.toString());
+				console.log(packet);
 				var data = {
 					topic: topic,
 					message: message.toString(),
@@ -54882,12 +54889,16 @@ var HelloWorld = function (_Component) {
 			});
 		}
 	}, {
+		key: 'componentWillMount',
+		value: function componentWillMount() {
+			this.configConnectBroker(defaultIpBroker, defaultPortWSBroker);
+		}
+	}, {
 		key: 'bbb',
 		value: function bbb() {
-			console.log('aaaa');
-			var _refs$form = this.refs.form;
-			var topic = _refs$form.topic;
-			var message = _refs$form.message;
+			var _refs$formSendMessage = this.refs.formSendMessage;
+			var topic = _refs$formSendMessage.topic;
+			var message = _refs$formSendMessage.message;
 
 
 			if (topic.value != '' && message.value != '') {
@@ -54916,18 +54927,47 @@ var HelloWorld = function (_Component) {
 						_react2.default.createElement(
 							'h1',
 							null,
-							'Watching Mqtt Message'
+							'Mqtt Message'
+						),
+						_react2.default.createElement('hr', null),
+						_react2.default.createElement(
+							'h3',
+							null,
+							'Config Connection to Mqtt Broker'
+						),
+						_react2.default.createElement(
+							'form',
+							{ action: 'javascript:void(0)', onSubmit: function onSubmit(event) {
+									return _this3.configConnectBroker(event.target.ip.value, event.target.port.value);
+								}, ref: 'formConfigClient' },
+							'IP : ',
+							_react2.default.createElement('input', { type: 'text', name: 'ip', defaultValue: 'localhost', placeholder: 'IP : localhost' }),
+							_react2.default.createElement('br', null),
+							'Port : ',
+							_react2.default.createElement('input', { type: 'text', name: 'port', defaultValue: '9001', placeholder: 'Port : 9001' }),
+							_react2.default.createElement('br', null),
+							_react2.default.createElement(
+								_reactBootstrap.Button,
+								{ bsStyle: 'success', type: 'submit' },
+								'Send'
+							)
+						),
+						_react2.default.createElement('hr', null),
+						_react2.default.createElement(
+							'h3',
+							null,
+							'Send Message'
 						),
 						_react2.default.createElement(
 							'form',
 							{ action: 'javascript:void(0)', onSubmit: function onSubmit() {
 									return _this3.bbb();
-								}, ref: 'form' },
+								}, ref: 'formSendMessage' },
 							'Topic : ',
-							_react2.default.createElement('input', { type: 'text', name: 'topic' }),
+							_react2.default.createElement('input', { type: 'text', name: 'topic', placeholder: 'Example : /ESP/LED' }),
 							_react2.default.createElement('br', null),
 							'Message : ',
-							_react2.default.createElement('input', { type: 'text', name: 'message' }),
+							_react2.default.createElement('input', { type: 'text', name: 'message', placeholder: 'Example : HelloWorld' }),
 							_react2.default.createElement('br', null),
 							_react2.default.createElement(
 								_reactBootstrap.Button,

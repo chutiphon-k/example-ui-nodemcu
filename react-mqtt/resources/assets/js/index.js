@@ -11,7 +11,7 @@ import {
 } from 'react-bootstrap';
 
 let client
-
+const  defaultIpBroker = '192.168.10.10', defaultPortWSBroker = 9001
 
 const RowData = ({index, topic, message, client_name}) => {
 	return (
@@ -30,34 +30,44 @@ export default class HelloWorld extends Component{
 
 	state = {
 		x : 'empty',
-		datas : []
-
+		datas : [],
+		statusConnectionBroker : 'Wait...'
 	}
 
-	componentWillMount(){
-		client  = mqtt.connect('ws://localhost:9001',{
+	configConnectBroker(ip, port){
+		if( typeof client !== "undefined" ){
+			client.end()
+		}
+
+		client  = mqtt.connect(`ws://${ip}:${port}`,{
 		  cmd: 'connect',
 		  clientId: 'Web',
 		})
 
-		client.on('connect', function () {
-		  client.subscribe('#')
+		client.on('connect',  () => {
+			client.subscribe('#')
+		  	this.setState({ datas : []})
 		})
-		 
+
 		client.on('message', (topic, message, packet) => {
-			console.log(message.toString())
+			console.log(packet)
 			let data = {
 				topic : topic,
 				message : message.toString(),
 				client_name : client.options.clientId
 			}
 			this.setState({ datas : [...this.state.datas, data] })
-		})
+		})	
 	}
 
+	componentWillMount(){
+		this.configConnectBroker(defaultIpBroker, defaultPortWSBroker)
+	}
+
+
+
 	bbb(){
-		console.log('aaaa')
-		let { topic, message } = this.refs.form
+		let { topic, message } = this.refs.formSendMessage
 
 		if(topic.value != '' && message.value != ''){
 			client.publish(topic.value, message.value)
@@ -72,10 +82,19 @@ export default class HelloWorld extends Component{
 				<br/>
 		      </Col>
 		      <Col md={10}>
-		      	<h1>Watching Mqtt Message</h1>
-		      	<form action="javascript:void(0)" onSubmit={() => this.bbb()} ref = 'form'>
-			      	Topic : <input type="text" name='topic'/><br/>
-			      	Message : <input type="text" name='message'/><br/>
+		      	<h1>Mqtt Message</h1>
+		      	<hr/>
+		      	<h3>Config Connection to Mqtt Broker</h3>
+		      	<form action="javascript:void(0)" onSubmit={(event) => this.configConnectBroker(event.target.ip.value, event.target.port.value)} ref = 'formConfigClient'>
+			      	IP : <input type="text" name='ip' defaultValue="localhost" placeholder="IP : localhost"/><br/>
+			      	Port : <input type="text" name='port' defaultValue="9001" placeholder='Port : 9001'/><br/>
+					<Button bsStyle="success" type='submit'>Send</Button>
+		      	</form>
+		      	<hr/>
+		      	<h3>Send Message</h3>
+		      	<form action="javascript:void(0)" onSubmit={() => this.bbb()} ref = 'formSendMessage'>
+			      	Topic : <input type="text" name='topic' placeholder='Example : /ESP/LED'/><br/>
+			      	Message : <input type="text" name='message' placeholder='Example : HelloWorld'/><br/>
 					<Button bsStyle="success" type='submit'>Send</Button>
 		      	</form>
 				<br/>
